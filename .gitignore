@@ -1,0 +1,22 @@
+# Datos genómicos
+*.bed
+*.bim
+*.fam
+*.bam
+*.bai
+*.cram
+*.vcf
+*.vcf.gz
+*.parquet
+
+# Datos tabulares privados
+*.tsv
+
+# Archivos temporales de R
+.Rhistory
+.RData
+.Rproj.user/
+
+# Resultados locales
+results/
+output/
