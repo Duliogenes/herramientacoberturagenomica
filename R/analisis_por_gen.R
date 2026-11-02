@@ -1,7 +1,7 @@
 
 # ============================================================
 # HERRAMIENTA DE COBERTURA GENOMICA
-# MODULO 05: ANALISIS DE COBERTURA POR GEN
+# MODULO 04: ANALISIS DE COBERTURA POR GEN
 # KOLMOGOROV-SMIRNOV + MEDIA + FDR
 # ============================================================
 
