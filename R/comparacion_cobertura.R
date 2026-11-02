@@ -1,7 +1,7 @@
 
 # ============================================================
 # HERRAMIENTA DE COBERTURA GENOMICA
-# MODULO 04: COMPARACION DE COBERTURA POR REGION
+# MODULO 03: COMPARACION DE COBERTURA POR REGION
 # KOLMOGOROV-SMIRNOV + MEDIA + FDR
 # ============================================================
 
