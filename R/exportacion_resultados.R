@@ -1,9 +1,8 @@
 
 # ============================================================
 # HERRAMIENTA DE COBERTURA GENOMICA
-# MODULO 05: EXPORTACION Y AGRUPACION DE RESULTADOS
-# GENES SIGNIFICATIVOS POR CROMOSOMA
-# COMPARACION: MEDIA + KOLMOGOROV-SMIRNOV
+# MODULO 05: EXPORTACION DE RESULTADOS
+# AGRUPACION DE GENES SIGNIFICATIVOS POR CROMOSOMA
 # ============================================================
 
 library(data.table)
@@ -14,23 +13,21 @@ library(data.table)
 
 exportar_genes_por_cromosoma <- function(
     resultados_genes,
-    datos,
     directorio_salida = "resultados",
     umbral_fdr = 0.05
 ) {
-
-  # ----------------------------------------------------------
-  # 2. VALIDAR INFORMACION DE ENTRADA
-  # ----------------------------------------------------------
 
   resultados_genes <- as.data.table(
     copy(resultados_genes)
   )
 
-  datos <- as.data.table(copy(datos))
+  # ----------------------------------------------------------
+  # 2. VALIDAR COLUMNAS
+  # ----------------------------------------------------------
 
-  columnas_resultados <- c(
+  columnas_requeridas <- c(
     "gene_name",
+    "chromosome",
     "n_regiones",
     "media_menores_60",
     "media_60_o_mas",
@@ -39,17 +36,16 @@ exportar_genes_por_cromosoma <- function(
     "FDR"
   )
 
-  columnas_anotacion <- c(
-    "gene_name",
-    "chromosome"
+  faltantes <- setdiff(
+    columnas_requeridas,
+    names(resultados_genes)
   )
 
-  if (!all(columnas_resultados %in% names(resultados_genes))) {
-    stop("Faltan columnas en resultados_genes.")
-  }
-
-  if (!all(columnas_anotacion %in% names(datos))) {
-    stop("Faltan columnas de anotacion en datos.")
+  if (length(faltantes) > 0) {
+    stop(
+      "Faltan columnas: ",
+      paste(faltantes, collapse = ", ")
+    )
   }
 
   # ----------------------------------------------------------
@@ -64,32 +60,10 @@ exportar_genes_por_cromosoma <- function(
   }
 
   # ----------------------------------------------------------
-  # 4. ASOCIAR CADA GEN CON SU CROMOSOMA
+  # 4. FILTRAR GENES SIGNIFICATIVOS
   # ----------------------------------------------------------
 
-  mapa_genes <- unique(
-    datos[
-      !is.na(gene_name) &
-        !is.na(chromosome),
-      .(
-        gene_name,
-        chromosome
-      )
-    ]
-  )
-
-  resultados_completos <- merge(
-    resultados_genes,
-    mapa_genes,
-    by = "gene_name",
-    all.x = TRUE
-  )
-
-  # ----------------------------------------------------------
-  # 5. FILTRAR GENES SIGNIFICATIVOS
-  # ----------------------------------------------------------
-
-  genes_significativos <- resultados_completos[
+  genes_significativos <- resultados_genes[
     !is.na(P) &
       !is.na(FDR) &
       FDR < umbral_fdr
@@ -103,7 +77,7 @@ exportar_genes_por_cromosoma <- function(
   )
 
   # ----------------------------------------------------------
-  # 6. EXPORTAR TODOS LOS GENES SIGNIFICATIVOS
+  # 5. EXPORTAR GENES SIGNIFICATIVOS
   # ----------------------------------------------------------
 
   fwrite(
@@ -115,7 +89,7 @@ exportar_genes_por_cromosoma <- function(
   )
 
   # ----------------------------------------------------------
-  # 7. RESUMEN DE GENES POR CROMOSOMA
+  # 6. RESUMEN DE GENES POR CROMOSOMA
   # ----------------------------------------------------------
 
   resumen_cromosomas <- genes_significativos[
@@ -142,7 +116,7 @@ exportar_genes_por_cromosoma <- function(
   )
 
   # ----------------------------------------------------------
-  # 8. CREAR LISTA NUMERADA POR CROMOSOMA
+  # 7. CREAR LISTA NUMERADA POR CROMOSOMA
   # ----------------------------------------------------------
 
   lista_genes <- genes_significativos[
@@ -169,7 +143,7 @@ exportar_genes_por_cromosoma <- function(
   )
 
   # ----------------------------------------------------------
-  # 9. AGRUPAR UNICAMENTE LOS NOMBRES DE LOS GENES
+  # 8. AGRUPAR SOLAMENTE LOS NOMBRES DE LOS GENES
   # ----------------------------------------------------------
 
   lista_nombres <- genes_significativos[
@@ -197,20 +171,16 @@ exportar_genes_por_cromosoma <- function(
   )
 
   # ----------------------------------------------------------
-  # 10. MOSTRAR RESULTADOS
+  # 9. MOSTRAR RESULTADOS
   # ----------------------------------------------------------
 
   cat("\n========================================\n")
-  cat("EXPORTACION DE GENES SIGNIFICATIVOS\n")
+  cat("EXPORTACION DE RESULTADOS COMPLETADA\n")
   cat("========================================\n")
 
-  cat("Comparacion: media + KS\n")
-
-  cat(
-    "Umbral FDR:",
-    umbral_fdr,
-    "\n"
-  )
+  cat("Método estadístico: Kolmogorov-Smirnov\n")
+  cat("Estadístico descriptivo: media\n")
+  cat("Umbral FDR:", umbral_fdr, "\n")
 
   cat(
     "Total de genes significativos:",
@@ -219,32 +189,28 @@ exportar_genes_por_cromosoma <- function(
   )
 
   cat(
-    "Cromosomas con genes significativos:",
+    "Cromosomas identificados:",
     uniqueN(genes_significativos$chromosome),
     "\n"
   )
 
-  cat("\nResumen por cromosoma:\n")
-
+  cat("\nRESUMEN POR CROMOSOMA:\n")
   print(resumen_cromosomas)
 
-  cat("\nLista de genes significativos:\n")
-
+  cat("\nLISTA DE GENES SIGNIFICATIVOS:\n")
   print(lista_genes, nrows = Inf)
 
-  cat("\nNombres agrupados por cromosoma:\n")
-
+  cat("\nNOMBRES AGRUPADOS POR CROMOSOMA:\n")
   print(lista_nombres)
 
-  cat("\nArchivos exportados en:", directorio_salida, "\n")
+  cat("\nArchivos guardados en:", directorio_salida, "\n")
 
   # ----------------------------------------------------------
-  # 11. DEVOLVER RESULTADOS
+  # 10. DEVOLVER RESULTADOS
   # ----------------------------------------------------------
 
   return(
     list(
-      resultados_completos = resultados_completos,
       genes_significativos = genes_significativos,
       resumen_cromosomas = resumen_cromosomas,
       lista_genes = lista_genes,
@@ -253,13 +219,13 @@ exportar_genes_por_cromosoma <- function(
   )
 }
 
+
 # ------------------------------------------------------------
-# 12. EJEMPLO DE EJECUCION
+# 11. EJEMPLO DE EJECUCION
 # ------------------------------------------------------------
 
 # resultado_exportacion <- exportar_genes_por_cromosoma(
 #   resultados_genes = resultados_genes,
-#   datos = datos,
 #   directorio_salida = "resultados",
 #   umbral_fdr = 0.05
 # )
